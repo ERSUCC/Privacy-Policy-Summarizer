@@ -1,3 +1,3 @@
 @echo off
 
-python host.py %*
+python -u host.py %*

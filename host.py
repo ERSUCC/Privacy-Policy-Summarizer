@@ -5,14 +5,12 @@
 
 from ai21 import AI21Client
 from json import dumps
-from msvcrt import setmode
-import os
 from re import sub
 from struct import pack, unpack
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.summarizers.lsa import LsaSummarizer
-import sys
+from sys import stdin, stdout
 
 ##### Questions and focus points #####
 
@@ -131,21 +129,18 @@ def summarize_policy(text):
 
 ##### Extension communication #####
 
-setmode(sys.stdin.fileno(), os.O_BINARY)
-setmode(sys.stdout.fileno(), os.O_BINARY)
-
 def receive():
-    length = sys.stdin.buffer.read(4)
+    length = stdin.buffer.read(4)
 
-    return sys.stdin.buffer.read(unpack("i", length)[0]).decode("utf-8")
+    return stdin.buffer.read(unpack("i", length)[0]).decode("utf-8")
 
 def send(message):
     message_bytes = dumps(message).encode("utf-8")
 
-    sys.stdout.buffer.write(pack("i", len(message_bytes)))
-    sys.stdout.buffer.write(message_bytes)
+    stdout.buffer.write(pack("i", len(message_bytes)))
+    stdout.buffer.write(message_bytes)
 
-    sys.stdout.buffer.flush()
+    stdout.buffer.flush()
 
 send(summarize_policy(receive()))
 
