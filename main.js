@@ -1,25 +1,43 @@
-function removeTags(string) {
-    return string.replaceAll(new RegExp("<.+?>|</.+?>", "g"), "");
+function setSummary(text) {
+    document.getElementById("summary").innerHTML = text;
+    document.getElementById("progress").remove();
 }
 
 chrome.tabs.query({ active: true, currentWindow: true }).then(function (tabs) {
     return chrome.scripting.executeScript({ target: { tabId: tabs[0].id }, func: function() {
-        return document.body.innerHTML;
-    } })
+        let result = "";
+
+        for (element of document.body.querySelectorAll("h1, h2, h3, h4, h5, h6, p")) {
+            result += element.innerHTML + " ";
+        }
+
+        return result;
+    } });
 }).then(function (result) {
-    let headings = document.createElement("ul");
+    let port = chrome.runtime.connectNative("com.isaac.summarizer");
 
-    for (match of result[0].result.matchAll(new RegExp("<h.>(.+?)</h.>", "g"))) {
-        let element = document.createElement("li");
+    port.onMessage.addListener(function (message) {
+        progress = parseFloat(message);
 
-        element.innerHTML = removeTags(match[1]);
+        if (isNaN(progress)) {
+            setSummary(message);
 
-        headings.appendChild(element);
-    }
+            port.disconnect();
+        }
 
-    document.getElementById("headings").appendChild(headings);
+        else {
+            percent = Math.floor(progress * 100) + "%";
+
+            document.getElementById("progress-fill").style.width = percent;
+            document.getElementById("progress-number").innerHTML = percent;
+        }
+    });
+
+    port.onDisconnect.addListener(function () {
+        setSummary("Error creating summary: " + chrome.runtime.lastError.message);
+    });
+
+    port.postMessage(result[0].result.replaceAll(new RegExp("<.+?>|</.+?>|&.+?;|\\s+", "g"), " ").trim());
 }).catch(function (error) {
-    console.log(error);
-
-    document.getElementById("headings").appendChild(document.createTextNode("Error parsing page."));
+    setSummary("Error parsing page: " + error);
 });

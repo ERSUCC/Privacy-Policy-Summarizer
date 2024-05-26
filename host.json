@@ -1,0 +1,9 @@
+{
+    "name": "com.isaac.summarizer",
+    "description": "Privacy Policy Summarizer",
+    "path": "host.bat",
+    "type": "stdio",
+    "allowed_origins": [
+        "chrome-extension://gddkhianlappnahkpkfmhnkihbipfolc/"
+    ]
+}
