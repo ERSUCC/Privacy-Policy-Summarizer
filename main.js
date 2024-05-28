@@ -37,7 +37,13 @@ chrome.tabs.query({ active: true, currentWindow: true }).then(function (tabs) {
         setSummary("Error creating summary: " + chrome.runtime.lastError.message);
     });
 
-    port.postMessage(result[0].result.replaceAll(new RegExp("<.+?>|</.+?>|&.+?;|\\s+", "g"), " ").trim());
+    let formatted = result[0].result.replaceAll(new RegExp("<.+?>|</.+?>|&.+?;|\\s+", "g"), " ").trim();
+
+    port.postMessage(Math.ceil(formatted.length / 50000));
+
+    for (let i = 0; i < formatted.length; i += 50000) {
+        port.postMessage(formatted.substring(i, Math.min(i + 50000, formatted.length)));
+    }
 }).catch(function (error) {
     setSummary("Error parsing page: " + error);
 });

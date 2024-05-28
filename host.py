@@ -53,33 +53,33 @@ GDPR_checklist = {
 
 client = AI21Client(api_key = "9fxQ7qXHEGh6RZxadsskKD8l5wBefKnB")
 
-def ask(context, question):
-    answer = client.answer.create(context, question).answer
+def ask(segments, question):
+    for context in segments:
+        answer = client.answer.create(context, question).answer
 
-    if answer is None:
-        return "Sorry, we could not find any information about this topic in the privacy policy."
+        if answer:
+            return answer
 
-    return answer
+    return "Sorry, we could not find any information about this topic in the privacy policy."
 
-def score(context, question):
-    answer = client.answer.create(context, question).answer
+def score(segments, question):
+    for context in segments:
+        answer = client.answer.create(context, question).answer
 
-    if answer is None:
-        return 0
-    
-    words = sub(r"[^\w\s.-]", "", answer).lower().split()
+        if answer:
+            words = sub(r"[^\w\s.-]", "", answer).lower().split()
 
-    return "yes" in words or "no" not in words
+            if "yes" in words or "no" not in words:
+                return 1
 
-def condense(source):
-    return client.summarize.create(source).summary
+    return 0
 
 def tag(text, tag):
     return "<" + tag + ">" + text + "</" + tag + ">"
 
 ##### Summary #####
 
-def summarize_policy(text):
+def summarize_policy(segments):
     summarizer = LsaSummarizer()
 
     summary = tag("Warning: The following summary and evaluation was created with a large language model (LLM), using the contents of the current website. It may present incomplete or false information due to the inaccuracies of LLMs. The final score tests if the policy is compliant with the General Data Protection Regulation (GDPR), which does not necessarily reflect how good the company is at protecting users' privacy.", "p")
@@ -88,7 +88,7 @@ def summarize_policy(text):
     its = float(len(questions) + sum(map(lambda x: len(x), GDPR_checklist.values())))
 
     for question in questions: 
-        answer = ask(text, question)
+        answer = ask(segments, question)
 
         if len(answer) > 300:
             parser = PlaintextParser.from_string(answer, Tokenizer("english"))
@@ -112,7 +112,7 @@ def summarize_policy(text):
         num_questions = len(GDPR_checklist[bullet])
 
         for question in GDPR_checklist[bullet]:
-            section_score += score(text, question)
+            section_score += score(segments, question)
 
             i += 1
 
@@ -129,10 +129,18 @@ def summarize_policy(text):
 
 ##### Extension communication #####
 
-def receive():
+def receive_segment():
     length = stdin.buffer.read(4)
 
     return stdin.buffer.read(unpack("i", length)[0]).decode("utf-8")
+
+def receive():
+    segments = []
+
+    for _ in range(int(receive_segment())):
+        segments.append(receive_segment())
+    
+    return segments
 
 def send(message):
     message_bytes = dumps(message).encode("utf-8")
