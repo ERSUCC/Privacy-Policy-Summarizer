@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Privacy Policy Condenser: A Browser Extension
+# Privacy Policy Summarizer: A Browser Extension
 # Authors: Charles Cheng, Jadon Lau, Isaac Brown, Tergel Myanganbayar
 
 from ai21 import AI21Client
@@ -51,7 +51,7 @@ GDPR_checklist = {
 
 ##### AI helper functions #####
 
-client = AI21Client(api_key = "9fxQ7qXHEGh6RZxadsskKD8l5wBefKnB")
+client = AI21Client(api_key = "0Pza8h6JCgPQi2x8qtKRW8VB8fDzaA0F")
 
 def ask(segments, question):
     for context in segments:
